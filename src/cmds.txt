@@ -1,0 +1,30 @@
+
+### ----------------------------------- ###
+### IPROCESSOR                          ### 
+### Image rendering and processing tool ###
+### ----------------------------------- ###
+
+Available commands:
+    exit, quit                                  - Exits the application
+
+    help                                        - Displays this information
+
+    image                                       - Applies a command to the Image interface
+        create <url>                            - Creates a new image from the provided URL
+        create <name> <url>                     - Creates and names an image from the provided URL
+        show <name>                             - Creates a graphical window to render the image
+        save <url>                              - Exports an image to BMP format at the provided URL
+        delete <name>                           - Deletes an image that matches the provided name
+
+    effect                                      - Applies a command to the Effect interface
+        create <args>                           - Creates an effect based on the provided arguments
+            name=<name>                         - Assigns a custom name to the newly created image
+
+            effect=<effect>                     - Sets the effect to the provided functionality
+                grayscale                       - Grayscale filter
+                color <r>,<g>,<b>               - Scale per-channel color intensity
+                intensity                       - Modulate the image intensity
+                    <val>                       - Scale intensity
+                    +<val>                      - Increase intensity
+                    -<val>                      - Decrease intensity
+
