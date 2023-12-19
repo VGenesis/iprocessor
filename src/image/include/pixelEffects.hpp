@@ -5,12 +5,7 @@
 
 class GrayscaleEffect : public PixelEffect{
     protected:
-        virtual void applyPixelTransform(uint8_t* pixels, int index, void* args){
-            int pixel_intensity = (pixels[index] + pixels[index+1] + pixels[index+2]) / 3; 
-            pixels[index] = pixel_intensity;
-            pixels[index+1] = pixel_intensity;
-            pixels[index+2] = pixel_intensity;
-        }
+        virtual void applyPixelTransform(uint8_t* pixels, int index, void* args) = 0;
 
     public:
         GrayscaleEffect(const char* name): PixelEffect(name)
@@ -24,19 +19,15 @@ class GrayscaleEffect : public PixelEffect{
         }
 };
 
-class ChannelFilterEffect : public PixelEffect{
+class ChannelFilterEffect : protected PixelEffect{
     private:
-        bool r, g, b;
+        float r, g, b;
 
     protected:
-        virtual void applyPixelTransform(uint8_t* pixels, int index, void* args){
-            pixels[index] = b? pixels[index] : 0;
-            pixels[index+1] = g? pixels[index+1] : 0;
-            pixels[index+2] = r? pixels[index+2] : 0;
-        }
+        virtual void applyPixelTransform(uint8_t* pixels, int index, void* args) = 0;
             
     public:
-        ChannelFilterEffect(const char* name, bool r, bool g, bool b):
+        ChannelFilterEffect(const char* name, float r, float g, float b):
             PixelEffect(name),
             r(r), g(g), b(b)
         {}
@@ -50,5 +41,4 @@ class ChannelFilterEffect : public PixelEffect{
             const char* b_str = b? "on" : "off";
             printf("color filter r=%s g=%s b=%s", r_str, g_str, b_str);
         }
-
 };

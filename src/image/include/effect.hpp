@@ -1,5 +1,8 @@
 #include <SDL2/SDL_surface.h>
 #include <SDL2/SDL_timer.h>
+#include <bits/fs_fwd.h>
+#include <cmath>
+#include <cstdint>
 #include <sys/types.h>
 
 #ifndef STDIO_H
@@ -68,6 +71,55 @@ class ImageEffect : public Effect{
 };
 
 class SpatialEffect : public Effect{
+    private:
+        int mask_size;
+        
+    protected:
+        virtual void applySpatialTransformation(uint8_t* pixels, uint8_t* mask, int index) = 0;
+
+    public:
+        SpatialEffect(const char* name, int mask_size):
+            Effect(name),
+            mask_size(mask_size)
+        {}
+
+        virtual SDL_Surface* applyEffect(SDL_Surface* surface){
+            int bpp = surface->pitch / surface->w;
+            SDL_Surface* expImage = SDL_CreateRGBSurface(
+                    0,
+                    surface->w + 2*mask_size,
+                    surface->h + 2*mask_size,
+                    bpp,
+                    0, 0, 0, 255
+                    );
+
+            uint8_t* pixels = static_cast<uint8_t*>(expImage->pixels);
+            int mask_w = 2*mask_size+1;
+            int mask_h = mask_w;
+            for(int i = mask_size; i < expImage->w-mask_size; i++){
+                for(int j = mask_size; j < expImage->h-mask_size; j++){
+                    int index = (i*surface->w + j) * bpp;
+                    SDL_Surface* mask_surface = SDL_CreateRGBSurface(
+                            0, mask_h, mask_w, bpp,
+                            0, 0, 0, 255
+                            );
+
+                    SDL_Rect srcrect = {i - mask_size, j - mask_size, mask_w, mask_h};
+                    SDL_BlitSurface(expImage, &srcrect, mask_surface, NULL);
+                    uint8_t* mask = static_cast<uint8_t*>(mask_surface->pixels);
+                    applySpatialTransformation(pixels, mask, index);
+                }
+            }
+
+            return surface;
+        }
+
+        virtual void print(){
+            printf("spatial transformation - ");
+        }
+};
+
+class FrequentialEffect : public Effect{
     protected:
         virtual void applySpatialTransformation(uint8_t* pixels, SDL_Surface* mask, int index) = 0;
 
@@ -75,7 +127,7 @@ class SpatialEffect : public Effect{
         virtual SDL_Surface* applyEffect(SDL_Surface* surface) = 0;
 
         virtual void print(){
-            printf("spatial transformation - ");
+            printf("frequecy-space  - ");
         }
 };
 

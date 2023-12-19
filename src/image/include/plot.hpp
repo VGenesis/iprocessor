@@ -8,6 +8,7 @@
 #include <SDL2/SDL_sensor.h>
 #include <SDL2/SDL_surface.h>
 #include <SDL2/SDL_video.h>
+#include <strstream>
 #endif
 
 #ifndef EFFECT_H
@@ -17,12 +18,12 @@
 
 #ifndef LIST_H
 #define LIST_H
-#include "list.hpp"
+#include "../../ds/include/list.hpp"
 #endif
 
-#ifndef STDIO_H
-#define STDIO_H 
-#include <stdio.h>
+#ifndef IOSTREAM
+#define IOSTREAM
+#include <iostream>
 #endif
 
 #ifndef VECTOR
@@ -42,16 +43,21 @@ class Plot{
     public:
         bool running{true};
 
-        Plot(const char* url){
-           image = SDL_LoadBMP(url);
+        Plot(std::string name, std::string url){
+           image = SDL_LoadBMP(url.c_str());
            window = SDL_CreateWindow(
-                    url,
+                    url.c_str(),
                     SDL_WINDOWPOS_UNDEFINED,
                     SDL_WINDOWPOS_UNDEFINED,
                     image->w,
                     image->h,
                     SDL_WINDOW_HIDDEN
                     );
+
+           if(SDL_GetError()){
+                std::cout << "File not found: " << url << std::endl; 
+                running = false;
+           }
 
            renderer = SDL_CreateRenderer(window, -1, SDL_RENDERER_ACCELERATED);
 
@@ -82,7 +88,7 @@ class Plot{
         }
 
         void quit(){
-            free(this);
+            running = false;
         }
 
         void addEffect(Effect* effect){

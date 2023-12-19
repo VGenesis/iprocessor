@@ -7,7 +7,7 @@
 #endif
 
 std::unordered_map<std::string, Plot> images;
-std::unordered_map<std::string, Plot> effects;
+std::unordered_map<std::string, Effect> effects;
 bool running = true;
 
 int getCode(std::string cmd, std::vector<std::string> commands){
@@ -34,7 +34,9 @@ void helpCommand(){
 }
 
 void imageRead(std::vector<std::string> args){
-    std::string name, url;
+    std::string name = "";
+    std::string url = "";
+
     switch(args.size()){
         case 0:
             std::cout << "Insufficient arguments provided. 'image create' requires at least 3" << std::endl;
@@ -47,11 +49,12 @@ void imageRead(std::vector<std::string> args){
             url = (args.begin()+1)->front();
             break;
     }
+
 }
 
 void imageCommand(std::vector<std::string> args){
     if(args.empty()){
-        std::cout << "Insufficient arguments provided. 'image' command requires at least 2." << std::endl;
+        std::cout << "Insufficient arguments provided. 'image' command family requires at least 2." << std::endl;
         return;
     }
 

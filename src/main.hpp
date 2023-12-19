@@ -1,7 +1,6 @@
 #ifndef MISC_H
 #define MISC_H
-#include "misc.hpp"
-#include <vector>
+#include "misc/include/misc.hpp"
 #endif
 
 #ifndef SDL_H
@@ -11,17 +10,17 @@
 
 #ifndef PLOT_H
 #define PLOT_H
-#include "plot.hpp"
+#include "image/include/plot.hpp"
 #endif
 
 #ifndef EFFECT_H
 #define EFFECT_H
-#include "effect.hpp"
+#include "image/include/effect.hpp"
 #endif
 
 #ifndef EFFECTS
 #define EFFECTS
-#include "pixelEffects.hpp"
+#include "image/include/pixelEffects.hpp"
 #endif
 
 #ifndef UNORDERED_MAP

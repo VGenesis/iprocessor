@@ -5,10 +5,8 @@ CFLAGS=-ldl -lSDL2
 SRC=main.cpp
 DST=build/main.o
 
-CPP_DEP_EFFECT =	effect.hpp
-CPP_DEP_PLOT =		plot.hpp
-CPP_DEP_LIST =		list.hpp
-CPP_DEPS =	$(CPP_DEP_EFFECT) $(CPP_DEP_PLOT) $(CPP_DEP_LIST)
+HPP_DEPS = $(wildcard "./**/*.hpp")
+CPP_DEPS = $(wildcard "./**/*.cpp")
 
 all:
 	make build
@@ -20,13 +18,13 @@ build: $(DST)
 run: 
 	./$(DST)
 
-$(DST): main.cpp $(CPP_DEPS)
+$(DST): main.cpp $(CPP_DEPS) $(HPP_DEPS)
 	mkdir -p build
-	$(CC) $(CSTD) $(SRC) -o $(DST) $(CFLAGS)
+	$(CC) $(CSTD) $(SRC) $(CPP_DEPS) -o $(DST) $(CFLAGS)
 
-debug:	main.cpp $(CPP_DEPS)
-	mkdir -p build
-	$(CC) $(CSTD) -g $(SRC) -o $(DST) $(CFLAGS)
+debug:	main.cpp $(CPP_DEPS) $(HPP_DEPS)
+	mkdir -p buildj
+	$(CC) $(CSTD) -g $(SRC) $(CPP_DEPS) -o $(DST) $(CFLAGS)
 	gdb $(DST)
 	make clean
 
