@@ -1,7 +1,6 @@
 #include <SDL2/SDL_surface.h>
 #include <SDL2/SDL_timer.h>
 #include <bits/fs_fwd.h>
-#include <cmath>
 #include <cstdint>
 #include <sys/types.h>
 
@@ -14,11 +13,12 @@ class Effect{
     protected:
         const char* name;
 
+    public:
         Effect(const char* name): name{name}
         {}
 
         ~Effect() = default;
-    public:
+
         virtual SDL_Surface* applyEffect(SDL_Surface* surface) = 0;
 
         virtual void print(){

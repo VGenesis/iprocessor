@@ -42,3 +42,15 @@ class ChannelFilterEffect : protected PixelEffect{
             printf("color filter r=%s g=%s b=%s", r_str, g_str, b_str);
         }
 };
+
+//enum IntensityFilterType{
+//    INTENSITY_SCALE,
+//    INTENSITY_TRANSFORM
+//};
+//class IntensityFilter : protected PixelEffect{
+//    private:
+//        float intensityScale;
+//        int intensityTransform;
+//        IntensityFilterType type;
+//        
+//};

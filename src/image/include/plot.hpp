@@ -3,12 +3,15 @@
 #include <SDL2/SDL.h>
 #include <SDL2/SDL_blendmode.h>
 #include <SDL2/SDL_error.h>
+#include <SDL2/SDL_log.h>
 #include <SDL2/SDL_pixels.h>
 #include <SDL2/SDL_render.h>
 #include <SDL2/SDL_sensor.h>
 #include <SDL2/SDL_surface.h>
+#include <SDL2/SDL_timer.h>
 #include <SDL2/SDL_video.h>
-#include <strstream>
+#include <fstream>
+#include <string>
 #endif
 
 #ifndef EFFECT_H
@@ -31,21 +34,33 @@
 #include <vector>
 #endif
 
+#ifndef MUTEX
+#define MUTEX
+#include <mutex>
+#endif
+
 class Plot{
     private:
-        SDL_Window* window;
-        SDL_Renderer* renderer;
-        SDL_Surface* image;
-        SDL_Surface* renderSurf;
-        
-        std::vector<Effect*> effects;
-        
-    public:
-        bool running{true};
+        std::string url {""};
+        SDL_Window* window{nullptr};
+        SDL_Renderer* renderer{nullptr};
+        SDL_Surface* image{nullptr};
+        SDL_Surface* renderSurf{nullptr};
 
-        Plot(std::string name, std::string url){
-           image = SDL_LoadBMP(url.c_str());
-           window = SDL_CreateWindow(
+        std::vector<Effect*> effects;
+        std::mutex mtx;
+
+        bool running{false};
+
+        Plot(std::string url, SDL_Surface* image){
+            mtx.lock();
+            
+            this->url = url;
+            this->image = image;
+            SDL_PixelFormat* pf = image->format;
+            renderSurf = SDL_CreateRGBSurface(0, image->w, image->h, 24, 0, 0, 0, 255);
+
+            window = SDL_CreateWindow(
                     url.c_str(),
                     SDL_WINDOWPOS_UNDEFINED,
                     SDL_WINDOWPOS_UNDEFINED,
@@ -53,31 +68,35 @@ class Plot{
                     image->h,
                     SDL_WINDOW_HIDDEN
                     );
+            SDL_Delay(100);
 
-           if(SDL_GetError()){
-                std::cout << "File not found: " << url << std::endl; 
+            SDL_ClearError();
+            const char* err = SDL_GetError();
+            if(strlen(err) > 0){
+                std::cout << SDL_GetError() << std::endl;
+                SDL_ClearError();
                 running = false;
-           }
+            }
 
-           renderer = SDL_CreateRenderer(window, -1, SDL_RENDERER_ACCELERATED);
+            std::cout << "here" << std::endl;
+            renderer = SDL_CreateRenderer(window, -1, SDL_RENDERER_ACCELERATED);
 
-           SDL_PixelFormat* pf = image->format;
-           renderSurf = SDL_CreateRGBSurface(0, image->w, image->h, 24, 0, 0, 0, 255);
+            mtx.unlock();
         }
 
-        Plot(const char* name, SDL_Surface* image){
-            this->image = image;
-            window = SDL_CreateWindow(
-                    name,
-                    SDL_WINDOWPOS_UNDEFINED,
-                    SDL_WINDOWPOS_UNDEFINED,
-                    image->w,
-                    image->h,
-                    SDL_WINDOW_SHOWN
-                    );
+    public:
+        
+        static Plot* createInstance(std::string url){
+            SDL_ClearError();
+            SDL_Surface* image = SDL_LoadBMP(url.c_str());
+            std::string err (SDL_GetError());
+            if(!err.empty()){
+                std::cout << err << std::endl;
+                SDL_ClearError();
+                return nullptr;
+            }
 
-            renderer = SDL_CreateRenderer(window, -1, SDL_RENDERER_ACCELERATED);
-            renderSurf = SDL_CreateRGBSurface(0, this->image->w, this->image->h, this->image->pitch / this->image->w, 0, 0, 0, 0);
+            return new Plot(url, image);
         }
 
         ~Plot(){
@@ -87,8 +106,29 @@ class Plot{
             SDL_FreeSurface(renderSurf);
         }
 
-        void quit(){
-            running = false;
+        std::string getURL() {return url;}
+
+        bool is_running() {return running;}
+
+        void setTitle(std::string name, int fps){
+            mtx.lock();
+
+            std::string title = name + " @" + std::to_string(fps) + "fps";
+            SDL_SetWindowTitle(window, title.c_str());
+
+            mtx.unlock();
+        }
+
+        void show(){
+            mtx.lock();
+
+            SDL_ShowWindow(window);
+            running = true;
+
+            mtx.unlock();
+        }
+
+        void hide(){
         }
 
         void addEffect(Effect* effect){
@@ -96,44 +136,51 @@ class Plot{
         }
 
         void update(){
+            mtx.lock();
+
             SDL_Event event;
             while(SDL_PollEvent(&event)){
                 if(event.type == SDL_QUIT){
+                    SDL_DestroyWindow(window);
                     running = false;
-                    printf("Window closed\n");
+                    mtx.unlock();
+                    return;
                 }
             }
 
             SDL_Rect srcrect = {0, 0, image->w, image->h};
             SDL_BlitSurface(image, &srcrect, renderSurf, &srcrect);
-            
-            SDL_SetSurfaceBlendMode(renderSurf, SDL_BLENDMODE_BLEND);
-            for(Effect* effect : effects)
-                renderSurf = effect->applyEffect(renderSurf);
+
+            //SDL_SetSurfaceBlendMode(renderSurf, SDL_BLENDMODE_BLEND);
+            //for(Effect* effect : effects)
+                //renderSurf = effect->applyEffect(renderSurf);
+
+            mtx.unlock();
         }
 
         void render(){
-            SDL_SetRenderDrawColor(renderer, 0, 0, 0, SDL_BLENDMODE_BLEND);
+            //mtx.lock();
+
+            SDL_SetRenderDrawColor(renderer, 0, 0, 0, 255);
             SDL_RenderClear(renderer);
 
             SDL_Texture* texture = SDL_CreateTextureFromSurface(renderer, renderSurf);
             SDL_Rect srcrect = {0, 0, image->w, image->h};
-            SDL_RenderCopy(renderer, texture, NULL, NULL);
+            SDL_RenderCopy(renderer, texture, &srcrect, &srcrect);
 
             SDL_RenderPresent(renderer);
+
+            //mtx.unlock();
         }
 
         void printEffects(){
+            mtx.lock();
+
             for(Effect* effect : effects){
                 effect->print();
             }
+
+            mtx.unlock();
         }
 
-        void hide(){
-            SDL_SetWindowOpacity(window, 0.0);
-        }
-
-        void show(){
-            SDL_SetWindowOpacity(window, 1.0);
-        }
 };

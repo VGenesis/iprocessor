@@ -10,9 +10,10 @@ Available commands:
     help                                        - Displays this information
 
     image                                       - Applies a command to the Image interface
-        create <url>                            - Creates a new image from the provided URL
-        create <name> <url>                     - Creates and names an image from the provided URL
+        read <url>                            - Loads an image from the provided URL
+        read <name> <url>                     - Creates and names an image from the provided URL
         show <name>                             - Creates a graphical window to render the image
+        list                                    - Lists the names of all loaded images
         save <url>                              - Exports an image to BMP format at the provided URL
         delete <name>                           - Deletes an image that matches the provided name
 

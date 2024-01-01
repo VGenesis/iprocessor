@@ -1,82 +1,20 @@
-#ifndef MAIN_H
-#define MAIN_H
+#ifndef MAIN_HPP
+#define MAIN_HPP
 #include "main.hpp"
-#include <fstream>
-#include <string>
-#include <unordered_map>
+#include <SDL2/SDL_timer.h>
+#include <algorithm>
+#include <atomic>
+#include <functional>
 #endif
 
-std::unordered_map<std::string, Plot> images;
-std::unordered_map<std::string, Effect> effects;
-bool running = true;
+#ifndef THREAD
+#define THREAD
+#include <thread>
+#endif
 
-int getCode(std::string cmd, std::vector<std::string> commands){
-    int cmdCode = 0;
-    for(std::string command : commands){
-        if(cmd == command)
-            return cmdCode;
+#define FPS 24
 
-        cmdCode++;
-    }
-    return -1;
-}
-
-void helpCommand(){
-    std::ifstream helpfile;
-    helpfile.open("cmds.txt");
-
-    char c;
-    while(helpfile.good()){
-        helpfile.get(c);
-        std::cout << c;
-    }
-
-}
-
-void imageRead(std::vector<std::string> args){
-    std::string name = "";
-    std::string url = "";
-
-    switch(args.size()){
-        case 0:
-            std::cout << "Insufficient arguments provided. 'image create' requires at least 3" << std::endl;
-            return;
-        case 1:
-            url = args.front();
-            break;
-        case 2:
-            name = args.front();
-            url = (args.begin()+1)->front();
-            break;
-    }
-
-}
-
-void imageCommand(std::vector<std::string> args){
-    if(args.empty()){
-        std::cout << "Insufficient arguments provided. 'image' command family requires at least 2." << std::endl;
-        return;
-    }
-
-    std::string cmd = args.front();
-    int cmdCode = getCode(cmd, imageCommands);
-
-    args.erase(args.begin(), args.begin()+1);
-    switch(cmdCode){
-        case IMAGE_READ:
-            imageRead(args);
-            break;
-        case IMAGE_SHOW:
-            break;
-        case IMAGE_SAVE:
-            break;
-        case IMAGE_DELETE:
-            break;
-        default:
-            break;
-    }
-}
-
+std::mutex cli_mtx;
 
 void effectCommand(std::vector<std::string> args){
     if(args.empty()){
@@ -96,10 +34,8 @@ void effectCommand(std::vector<std::string> args){
         default:
             break;
     }
-
 }
-
-void applyCommand(std::vector<std::string> args){
+void applyCommand(std::vector<std::string> args, std::atomic<bool>* running){
     std::string cmd = args.front();
     int cmdCode = getCode(cmd, commands);
 
@@ -108,7 +44,7 @@ void applyCommand(std::vector<std::string> args){
     switch(cmdCode){
         case CMD_EXIT:
         case CMD_QUIT:
-            running = false;
+            running->store(false);
             break;
         case CMD_HELP:
             helpCommand();
@@ -120,23 +56,89 @@ void applyCommand(std::vector<std::string> args){
             effectCommand(args);
             break;
         default:
+            cli_mtx.lock();
             std::cout << "Unrecognized command. Type 'help' to view supported commands.\n";
+            cli_mtx.unlock();
             break;
     }
-
 }
 
-int main(){
-    std::string input;
+void cli_init(std::atomic<bool>* running){
+    std::vector<std::string> start_cmd ({"image", "read", "assets/images/640x480.bmp"});
+    applyCommand(start_cmd, running);
+}
+
+void threadf_cli(std::atomic<bool>* running){
+    cli_init(running);
     
-    while(running){
+    while(running->load()){;
+        std::string input;
         std::cout << "> ";
         getline(std::cin, input);
         std::vector<std::string> words = strsplit(input);
 
         std::string cmd = words.front();
-        applyCommand(words);
+        applyCommand(words, running);
+        
     }
+
+    cli_mtx.lock();
+    std::cout << "CLI Thread Ended." << std::endl;
+    cli_mtx.unlock();
+}
+
+void threadf_image_update(std::atomic<bool>* running){
+    static long time = SDL_GetTicks64();
+    static long prev_time = time;
+    static long frametime = time;
+
+    static long tick_ms = 1e3 / FPS;
+    static int frames = 0;
+    
+    while (running->load()) {
+        time = SDL_GetTicks64();
+        long ms = time - prev_time;
+        while(ms > tick_ms){
+            for(std::pair<std::string, Plot*> image : images){
+                Plot* plot = image.second;
+                if(plot->is_running()){
+                    plot->update();
+                    plot->render();
+                }
+            }
+            ms -= tick_ms;
+            frames++;
+            prev_time = time;
+        }
+
+
+        if(time - frametime > 1000){
+            for(std::pair<std::string, Plot*> image : images){
+                Plot* plot = image.second;
+                plot->setTitle(image.first, frames);
+            }
+            
+            frames = 0;
+            frametime += 1000;
+        }
+
+    }
+
+    cli_mtx.lock();
+    std::cout << "Image Thread Ended." << std::endl;
+    cli_mtx.unlock();
+}
+
+int main(){
+    static std::atomic<bool> running;
+    running.store(true);
+    std::thread cli_thread (threadf_cli, &running);
+    std::thread image_thread (threadf_image_update, &running);
+
+    image_thread.join();
+    cli_thread.join();
+
+
     return 0;
 
 }
