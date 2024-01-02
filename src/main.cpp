@@ -1,10 +1,18 @@
 #ifndef MAIN_HPP
 #define MAIN_HPP
 #include "main.hpp"
-#include <SDL2/SDL_timer.h>
-#include <algorithm>
+#include "glad/include/glad/glad.h"
+#include <SDL2/SDL_video.h>
+#endif
+
+#ifndef ATOMIC
+#define ATOMIC
 #include <atomic>
-#include <functional>
+#endif
+
+#ifndef SDL_H
+#define SDL_H
+#include <SDL2/SDL.h>
 #endif
 
 #ifndef THREAD
@@ -66,6 +74,7 @@ void applyCommand(std::vector<std::string> args, std::atomic<bool>* running){
 void cli_init(std::atomic<bool>* running){
     std::vector<std::string> start_cmd ({"image", "read", "assets/images/640x480.bmp"});
     applyCommand(start_cmd, running);
+    applyCommand(start_cmd, running);
 }
 
 void threadf_cli(std::atomic<bool>* running){
@@ -87,7 +96,17 @@ void threadf_cli(std::atomic<bool>* running){
     cli_mtx.unlock();
 }
 
-void threadf_image_update(std::atomic<bool>* running){
+void GL_init(std::atomic<SDL_GLContext> gl_context, Plot* plot){
+    gl_context.store(plot->getWindow());
+
+    SDL_GL_SetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, 4);
+    SDL_GL_SetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, 1);
+    SDL_GL_SetAttribute(SDL_GL_CONTEXT_PROFILE_MASK, SDL_GL_CONTEXT_PROFILE_CORE);
+    SDL_GL_SetAttribute(SDL_GL_DOUBLEBUFFER, 1);
+    SDL_GL_SetAttribute(SDL_GL_DEPTH_SIZE, 24);
+}
+
+void threadf_image_update(std::atomic<bool>* running, std::atomic<SDL_GLContext>* gl_context){
     static long time = SDL_GetTicks64();
     static long prev_time = time;
     static long frametime = time;
@@ -102,8 +121,11 @@ void threadf_image_update(std::atomic<bool>* running){
             for(std::pair<std::string, Plot*> image : images){
                 Plot* plot = image.second;
                 if(plot->is_running()){
+                    SDL_Window* window = plot->getWindow();
+                    SDL_GL_MakeCurrent(window, gl_context->load());
                     plot->update();
                     plot->render();
+                    SDL_GL_SwapWindow(window);
                 }
             }
             ms -= tick_ms;
@@ -132,8 +154,11 @@ void threadf_image_update(std::atomic<bool>* running){
 int main(){
     static std::atomic<bool> running;
     running.store(true);
+    static std::atomic<SDL_GLContext> gl_context;
+    gl_context.store(nullptr);
+
     std::thread cli_thread (threadf_cli, &running);
-    std::thread image_thread (threadf_image_update, &running);
+    std::thread image_thread (threadf_image_update, &running, &gl_context);
 
     image_thread.join();
     cli_thread.join();

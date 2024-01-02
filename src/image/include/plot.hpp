@@ -1,17 +1,8 @@
 #ifndef SDL_H
 #define SDL_H
 #include <SDL2/SDL.h>
-#include <SDL2/SDL_blendmode.h>
-#include <SDL2/SDL_error.h>
-#include <SDL2/SDL_log.h>
-#include <SDL2/SDL_pixels.h>
-#include <SDL2/SDL_render.h>
-#include <SDL2/SDL_sensor.h>
-#include <SDL2/SDL_surface.h>
-#include <SDL2/SDL_timer.h>
+#include <SDL2/SDL_events.h>
 #include <SDL2/SDL_video.h>
-#include <fstream>
-#include <string>
 #endif
 
 #ifndef EFFECT_H
@@ -34,27 +25,39 @@
 #include <vector>
 #endif
 
+#ifndef STRING
+#define STRING
+#include <string>
+#endif
+
 #ifndef MUTEX
 #define MUTEX
 #include <mutex>
 #endif
 
+#ifndef ATOMIC
+#define ATOMIC
+#include <atomic>
+#endif
+
 class Plot{
     private:
         std::string url {""};
-        SDL_Window* window{nullptr};
-        SDL_Renderer* renderer{nullptr};
-        SDL_Surface* image{nullptr};
-        SDL_Surface* renderSurf{nullptr};
+        SDL_Window* window {nullptr};
+        SDL_Renderer* renderer {nullptr};
+        SDL_Surface* image {nullptr};
+        SDL_Surface* renderSurf {nullptr};
 
         std::vector<Effect*> effects;
         std::mutex mtx;
 
         bool running{false};
 
+
         Plot(std::string url, SDL_Surface* image){
             mtx.lock();
-            
+
+            SDL_ClearError();
             this->url = url;
             this->image = image;
             SDL_PixelFormat* pf = image->format;
@@ -68,17 +71,17 @@ class Plot{
                     image->h,
                     SDL_WINDOW_HIDDEN
                     );
-            SDL_Delay(100);
 
-            SDL_ClearError();
+            if(SDL_Init(SDL_INIT_VIDEO) < 0){
+                std::cout << "Could not initialize SDL video system. Error: " << SDL_GetError() << std::endl;
+                SDL_Quit();
+            }
+
             const char* err = SDL_GetError();
             if(strlen(err) > 0){
                 std::cout << SDL_GetError() << std::endl;
-                SDL_ClearError();
-                running = false;
             }
 
-            std::cout << "here" << std::endl;
             renderer = SDL_CreateRenderer(window, -1, SDL_RENDERER_ACCELERATED);
 
             mtx.unlock();
@@ -104,9 +107,12 @@ class Plot{
             SDL_DestroyRenderer(renderer);
             SDL_FreeSurface(image);
             SDL_FreeSurface(renderSurf);
+            SDL_Quit();
         }
 
         std::string getURL() {return url;}
+
+        SDL_Window* getWindow() {return window;}
 
         bool is_running() {return running;}
 
@@ -128,11 +134,12 @@ class Plot{
             mtx.unlock();
         }
 
-        void hide(){
-        }
-
         void addEffect(Effect* effect){
+            mtx.lock();
+            
             effects.push_back(effect);
+
+            mtx.unlock();
         }
 
         void update(){
@@ -140,16 +147,18 @@ class Plot{
 
             SDL_Event event;
             while(SDL_PollEvent(&event)){
-                if(event.type == SDL_QUIT){
-                    SDL_DestroyWindow(window);
-                    running = false;
-                    mtx.unlock();
-                    return;
+                if(event.type == SDL_WINDOWEVENT && event.window.event == SDL_WINDOWEVENT_CLOSE){
+                    if(event.window.windowID == SDL_GetWindowID(window)){
+                        SDL_HideWindow(window);
+                        running = false;
+                        mtx.unlock();
+                        return;
+                    }
                 }
             }
 
-            SDL_Rect srcrect = {0, 0, image->w, image->h};
-            SDL_BlitSurface(image, &srcrect, renderSurf, &srcrect);
+            // SDL_Rect srcrect = {0, 0, image->w, image->h};
+            // SDL_BlitSurface(image, &srcrect, renderSurf, &srcrect);
 
             //SDL_SetSurfaceBlendMode(renderSurf, SDL_BLENDMODE_BLEND);
             //for(Effect* effect : effects)
@@ -159,18 +168,18 @@ class Plot{
         }
 
         void render(){
-            //mtx.lock();
+            mtx.lock();
 
             SDL_SetRenderDrawColor(renderer, 0, 0, 0, 255);
             SDL_RenderClear(renderer);
 
-            SDL_Texture* texture = SDL_CreateTextureFromSurface(renderer, renderSurf);
+            SDL_Texture* texture = SDL_CreateTextureFromSurface(renderer, image);
             SDL_Rect srcrect = {0, 0, image->w, image->h};
             SDL_RenderCopy(renderer, texture, &srcrect, &srcrect);
 
             SDL_RenderPresent(renderer);
 
-            //mtx.unlock();
+            mtx.unlock();
         }
 
         void printEffects(){
