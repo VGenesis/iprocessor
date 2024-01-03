@@ -56,5 +56,8 @@ debug:	main.cpp $(CPP_DEPS)
 clean:
 	rm -rf build
 
+clean_hanging_procs:
+	sudo pkill -9 make
+
 imagetest.o: imagetest.cpp
 	$(CXX) $(CXXSTD) imagetest.cpp glad/src/glad.c -o $(TEST) -I./glad/include $(CXXFLAGS) 

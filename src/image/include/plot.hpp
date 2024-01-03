@@ -1,6 +1,7 @@
 #ifndef SDL_H
 #define SDL_H
 #include <SDL2/SDL.h>
+#include <SDL2/SDL_error.h>
 #include <SDL2/SDL_events.h>
 #include <SDL2/SDL_video.h>
 #endif
@@ -114,6 +115,8 @@ class Plot{
 
         SDL_Window* getWindow() {return window;}
 
+        SDL_Surface* getRenderSurf() {return renderSurf;}
+
         bool is_running() {return running;}
 
         void setTitle(std::string name, int fps){
@@ -157,27 +160,33 @@ class Plot{
                 }
             }
 
-            // SDL_Rect srcrect = {0, 0, image->w, image->h};
-            // SDL_BlitSurface(image, &srcrect, renderSurf, &srcrect);
+            SDL_Rect srcrect = {0, 0, image->w, image->h};
+            SDL_BlitSurface(image, &srcrect, renderSurf, &srcrect);
 
-            //SDL_SetSurfaceBlendMode(renderSurf, SDL_BLENDMODE_BLEND);
-            //for(Effect* effect : effects)
-                //renderSurf = effect->applyEffect(renderSurf);
+            SDL_SetSurfaceBlendMode(renderSurf, SDL_BLENDMODE_BLEND);
+            for(Effect* effect : effects)
+                renderSurf = effect->applyEffect(renderSurf);
 
             mtx.unlock();
         }
 
-        void render(){
+        void render(std::atomic<SDL_GLContext>* gl_context){
             mtx.lock();
 
+            SDL_ClearError();
+            SDL_GL_MakeCurrent(window, gl_context->load());
             SDL_SetRenderDrawColor(renderer, 0, 0, 0, 255);
             SDL_RenderClear(renderer);
 
-            SDL_Texture* texture = SDL_CreateTextureFromSurface(renderer, image);
-            SDL_Rect srcrect = {0, 0, image->w, image->h};
+            SDL_Texture* texture = SDL_CreateTextureFromSurface(renderer, renderSurf);
+            SDL_Rect srcrect = {0, 0, renderSurf->w, renderSurf->h};
             SDL_RenderCopy(renderer, texture, &srcrect, &srcrect);
+            std::string err = SDL_GetError();
+            if(err != "") std::cout << err << std::endl;
 
             SDL_RenderPresent(renderer);
+            SDL_GL_SwapWindow(window);
+
 
             mtx.unlock();
         }

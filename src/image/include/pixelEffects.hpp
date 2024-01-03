@@ -3,9 +3,14 @@
 #include "effect.hpp"
 #endif
 
+#ifndef STRING
+#define STRING
+#include <string>
+#endif
+
 class GrayscaleEffect : public PixelEffect{
     protected:
-        virtual void applyPixelTransform(uint8_t* pixels, int index, void* args) = 0;
+        virtual void applyPixelTransform(uint8_t* pixels, int index, void* args);
 
     public:
         GrayscaleEffect(const char* name): PixelEffect(name)
@@ -19,20 +24,20 @@ class GrayscaleEffect : public PixelEffect{
         }
 };
 
-class ChannelFilterEffect : protected PixelEffect{
+class ColorFilterEffect : public PixelEffect{
     private:
         float r, g, b;
 
     protected:
-        virtual void applyPixelTransform(uint8_t* pixels, int index, void* args) = 0;
+        virtual void applyPixelTransform(uint8_t* pixels, int index, void* args);
             
     public:
-        ChannelFilterEffect(const char* name, float r, float g, float b):
+        ColorFilterEffect(const char* name, float r, float g, float b):
             PixelEffect(name),
             r(r), g(g), b(b)
         {}
 
-        ~ChannelFilterEffect() = default;
+        ~ColorFilterEffect() = default;
 
         virtual void print(){
             PixelEffect::print();
@@ -43,14 +48,40 @@ class ChannelFilterEffect : protected PixelEffect{
         }
 };
 
-//enum IntensityFilterType{
-//    INTENSITY_SCALE,
-//    INTENSITY_TRANSFORM
-//};
-//class IntensityFilter : protected PixelEffect{
-//    private:
-//        float intensityScale;
-//        int intensityTransform;
-//        IntensityFilterType type;
-//        
-//};
+enum IntensityEffectType{
+    INTENSITY_SCALE,
+    INTENSITY_TRANSFORM
+};
+
+class IntensityEffect : public PixelEffect{
+    private:
+        IntensityEffectType type;
+        float intensityScale{1.0};
+        int intensityTransform{0};
+        
+    protected:
+        virtual void applyPixelTransform(uint8_t* pixels, int index, void* args);
+
+
+    public:
+        IntensityEffect(const char* name, int intensityTransform): 
+            PixelEffect(name),
+            type(INTENSITY_TRANSFORM),
+            intensityTransform(intensityTransform)
+        {};
+
+        IntensityEffect(const char* name, float intensityScale): 
+            PixelEffect(name),
+            type(INTENSITY_TRANSFORM),
+            intensityScale(intensityScale)
+        {};
+
+        virtual void print(){
+            PixelEffect::print();
+            std::string typeStr = (type == INTENSITY_SCALE)
+                ? "Intensity Scale: " + std::to_string(intensityScale)
+                : "Intensity Transform: " + std::to_string(intensityTransform);
+            printf("%s", typeStr.c_str());
+        }
+};
+

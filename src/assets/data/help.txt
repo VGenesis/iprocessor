@@ -10,22 +10,29 @@ Available commands:
     help                                        - Displays this information
 
     image                                       - Applies a command to the Image interface
-        read <url>                            - Loads an image from the provided URL
-        read <name> <url>                     - Creates and names an image from the provided URL
+        read <url>                              - Loads an image from the provided URL
+        read <url> <name>                       - Creates and names an image from the provided URL
         show <name>                             - Creates a graphical window to render the image
         list                                    - Lists the names of all loaded images
+        apply <effect>                          - Applies the provided effect to the image
         save <url>                              - Exports an image to BMP format at the provided URL
-        delete <name>                           - Deletes an image that matches the provided name
+        remove <name>                           - Removes an image that matches the provided name
 
     effect                                      - Applies a command to the Effect interface
         create <args>                           - Creates an effect based on the provided arguments
-            name=<name>                         - Assigns a custom name to the newly created image
+            1st arg <name>                      - Assigns a custom name to the newly created image
+            other args <effect>                 - Sets the effect to the provided functionality
+            
+        remove <name>                           - Removes the effect that matches the provided name
 
-            effect=<effect>                     - Sets the effect to the provided functionality
-                grayscale                       - Grayscale filter
-                color <r>,<g>,<b>               - Scale per-channel color intensity
-                intensity                       - Modulate the image intensity
-                    <val>                       - Scale intensity
-                    +<val>                      - Increase intensity
-                    -<val>                      - Decrease intensity
+Effects:
+    grayscale                       - Grayscale filter
+    colorfilter <r> <g> <b>         - Scale per-channel color intensity
+    intensity                       - Modulate the image intensity
+        <val>                       - Scale intensity
+        +<val>                      - Increase intensity
+        -<val>                      - Decrease intensity
+    hist                            - Calculate the image histogram
+    fft                             - Calculate the Fast Fourier Transform
+
 

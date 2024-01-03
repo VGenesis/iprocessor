@@ -1,6 +1,5 @@
 #ifndef VECTOR
 #define VECTOR
-#include <mutex>
 #include <vector>
 #endif
 
@@ -29,11 +28,15 @@
 #include "image_cmds.hpp"
 #endif
 
+#ifndef EFFECT_COMMANDS
+#define EFFECT_COMMANDS
+#include "effect_cmds.hpp"
+#endif
+
 #define HELP_FILE "./assets/data/help.txt"
 
 std::unordered_map<std::string, Plot*> images;
 std::unordered_map<std::string, Effect*> effects;
-
 
 const std::vector<std::string> commands {"exit", "quit", "help", "image", "effect"};
 enum Commands{
@@ -95,6 +98,8 @@ void imageCommand(std::vector<std::string> args){
     switch(cmdCode){
         case IMAGE_READ:
             imageRead(args, images);
+            imageRead({"assets/images/default.bmp", "__default"}, images);
+            imageDelete({"__default"}, images);
             break;
         case IMAGE_SHOW:
             imageShow(args, images);
@@ -113,3 +118,24 @@ void imageCommand(std::vector<std::string> args){
             break;
     }
 }
+
+void effectCommand(std::vector<std::string> args){
+    if(args.empty()){
+        std::cout << "Insufficient arguments provided." << std::endl;
+        return;
+    }
+
+    std::string cmd = args.front();
+    args.erase(args.begin(), args.begin()+1);
+    int cmdCode = getCode(cmd, effectCommands);
+    switch(cmdCode){
+        case EFFECT_CREATE:
+            effect_create(args, effects);
+            break;
+        case EFFECT_REMOVE:
+            effect_remove(args, effects);
+            break;
+        default:
+            break;
+    }
+};
