@@ -131,7 +131,6 @@ void imageSave(std::vector<std::string> args, std::unordered_map<std::string, Pl
 
     if(err == "") std::cout << "Image '" << name << "' saved to file '" << url << "' successfully." << std::endl;
     else std::cout << err << std::endl;
-
 }
 
 void imageDelete(std::vector<std::string> args, std::unordered_map<std::string, Plot*>& images){
@@ -150,7 +149,7 @@ void imageDelete(std::vector<std::string> args, std::unordered_map<std::string, 
 
     auto deleted_image = images.find(name);
     if(deleted_image->second->is_running()){
-        printf("Failed to remove image '%s': image is currently being shown", name.c_str());
+        printf("Failed to remove image '%s': image is currently being shown\n", name.c_str());
     } else if(deleted_image != images.end()){
         if(name != "__default") printf("Image '%s' removed successfully\n", name.c_str());
         images.erase(name);

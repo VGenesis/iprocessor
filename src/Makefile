@@ -7,6 +7,7 @@ DST=build/main.o
 
 CPP_CMDS=		$(wildcard ./cmds/src/*.cpp)
 CPP_IMAGE=		$(wildcard ./image/src/*.cpp)
+CPP_MISC=		$(wildcard ./misc/src/*.cpp)
 CPP_GLAD=		./glad/src/glad.c
 
 HPP_INC_DS=		./ds/include
@@ -21,7 +22,7 @@ HPP_IMAGE=		$(wildcard $(HPP_INC_IMAGE)/*.hpp)
 HPP_MISC=		$(wildcard $(HPP_INC_MISC)/*.hpp)
 HPP_GLAD=		$(wildcard $(HPP_INC_GLAD)/*.hpp)
 
-CPP_DEPS= 		$(CPP_CMDS) $(CPP_IMAGE) $(CPP_GLAD)
+CPP_DEPS= 		$(CPP_CMDS) $(CPP_IMAGE) $(CPP_MISC) $(CPP_GLAD) 
 HPP_DEPS= 		$(HPP_DS) $(HPP_CMDS) $(HPP_IMAGE) $(HPP_MISC) $(HPP_GLAD)
 HPP_INCS= 		-I$(HPP_INC_DS) -I$(HPP_INC_CMDS) -I$(HPP_INC_IMAGE) -I$(HPP_INC_MISC) -I$(HPP_INC_GLAD)
 

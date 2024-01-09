@@ -3,10 +3,6 @@
 #include "../include/pixelEffects.hpp"
 #endif
 
-#ifndef MISC
-#define MISC
-#include "../../misc/include/misc.hpp"
-#endif
 
 void GrayscaleEffect::applyPixelTransform(uint8_t* pixels, int index, void* args){
     int pixel_intensity = (pixels[index] + pixels[index+1] + pixels[index+2]) / 3; 
@@ -15,7 +11,7 @@ void GrayscaleEffect::applyPixelTransform(uint8_t* pixels, int index, void* args
     pixels[index+2] = pixel_intensity;
 }
 
-void ChannelFilterEffect::applyPixelTransform(uint8_t* pixels, int index, void* args){
+void ColorFilterEffect::applyPixelTransform(uint8_t* pixels, int index, void* args){
     pixels[index] = b * pixels[index];
     pixels[index+1] = g * pixels[index+1];
     pixels[index+2] = r * pixels[index+2];

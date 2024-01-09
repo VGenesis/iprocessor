@@ -8,6 +8,11 @@
 #include <string>
 #endif
 
+#ifndef MISC_H
+#define MISC_H
+#include "../../misc/include/misc.hpp"
+#endif
+
 class GrayscaleEffect : public PixelEffect{
     protected:
         virtual void applyPixelTransform(uint8_t* pixels, int index, void* args);

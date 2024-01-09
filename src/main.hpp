@@ -18,12 +18,22 @@
 #include <iostream>
 #endif
 
-#ifndef CMDS
-#define CMDS
-#include "cmds/include/cmds.hpp"
+#ifndef ATOMIC
+#define ATOMIC
+#include <atomic>
+#endif
+
+#ifndef THREAD
+#define THREAD
+#include <thread>
 #endif
 
 #ifndef MISC_H
 #define MISC_H
 #include "misc/include/misc.hpp"
+#endif
+
+#ifndef CMDS_H
+#define CMDS_H
+#include "cmds/include/cmds.hpp"
 #endif

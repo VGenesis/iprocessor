@@ -9,6 +9,8 @@
 #include <stdio.h>
 #endif
 
+
+
 class Effect{
     protected:
         const char* name;
