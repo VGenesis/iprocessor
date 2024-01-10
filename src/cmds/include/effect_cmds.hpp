@@ -18,5 +18,7 @@
 #include "../../image/include/effect.hpp"
 #endif
 
-void effect_create(std::vector<std::string> args, std::unordered_map<std::string, Effect*> effects);
-void effect_remove(std::vector<std::string> args, std::unordered_map<std::string, Effect*> effects);
+void effect_create(std::vector<std::string> args, std::unordered_map<std::string, Effect*>& effects);
+void effect_apply(std::vector<std::string> args, std::unordered_map<std::string, Effect*>& effects);
+void effect_list(std::vector<std::string> args, std::unordered_map<std::string, Effect*>& effects);
+void effect_remove(std::vector<std::string> args, std::unordered_map<std::string, Effect*>& effects);

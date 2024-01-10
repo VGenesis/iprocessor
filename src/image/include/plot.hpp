@@ -3,6 +3,7 @@
 #include <SDL2/SDL.h>
 #include <SDL2/SDL_error.h>
 #include <SDL2/SDL_events.h>
+#include <SDL2/SDL_surface.h>
 #include <SDL2/SDL_video.h>
 #endif
 
@@ -86,10 +87,10 @@ class Plot{
             renderer = SDL_CreateRenderer(window, -1, SDL_RENDERER_ACCELERATED);
 
             mtx.unlock();
+            this->updateEffects();
         }
 
     public:
-        
         static Plot* createInstance(std::string url){
             SDL_ClearError();
             SDL_Surface* image = SDL_LoadBMP(url.c_str());
@@ -145,20 +146,19 @@ class Plot{
             mtx.unlock();
         }
 
-        void update(){
+        void update(SDL_Event& e){
             mtx.lock();
 
-            SDL_Event event;
-            while(SDL_PollEvent(&event)){
-                if(event.type == SDL_WINDOWEVENT && event.window.event == SDL_WINDOWEVENT_CLOSE){
-                    if(event.window.windowID == SDL_GetWindowID(window)){
-                        SDL_HideWindow(window);
-                        running = false;
-                        mtx.unlock();
-                        return;
-                    }
-                }
+            if(e.type == SDL_WINDOWEVENT_CLOSE){
+                SDL_HideWindow(window);
+                running = false;
             }
+
+            mtx.unlock();
+        }
+
+        void updateEffects(){
+            mtx.lock();
 
             SDL_Rect srcrect = {0, 0, image->w, image->h};
             SDL_BlitSurface(image, &srcrect, renderSurf, &srcrect);
@@ -200,5 +200,4 @@ class Plot{
 
             mtx.unlock();
         }
-
 };

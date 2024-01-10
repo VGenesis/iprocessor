@@ -44,17 +44,26 @@ enum ImageCommands{
     IMAGE_DELETE
 };
 
-const std::vector<std::string> effectCommands = {"create", "apply", "remove"};
+const std::vector<std::string> effectCommands = {"create", "apply", "list", "remove"};
 enum EffectCommands{
     EFFECT_CREATE,
     EFFECT_APPLY,
+    EFFECT_LIST,
     EFFECT_REMOVE
 };
 
-void updateImages(std::atomic<SDL_GLContext>* gl_context){
+void updateImages(std::pair<std::string, std::string>* affect){
+    if(affect != nullptr){
+        Plot* image = images.find(affect->first)->second;
+        Effect* effect = effects.find(affect->second)->second;
+        image->addEffect(effect);
+    }
+}
+
+void renderImages(std::atomic<SDL_GLContext>* gl_context, SDL_Event& e){
     for(auto pair : images){
         Plot* image = pair.second;
-        image->update();
+        image->update(e);
         image->render(gl_context);
     }
 }
@@ -155,10 +164,17 @@ void effectCommand(std::vector<std::string> args){
         case EFFECT_CREATE:
             effect_create(args, effects);
             break;
+        case EFFECT_APPLY:
+            effect_apply(args, effects);
+            break;
+        case EFFECT_LIST:
+            effect_list(args, effects);
+            break;
         case EFFECT_REMOVE:
             effect_remove(args, effects);
             break;
         default:
+            printf("Unrecognized command 'effect %s'. Type 'help' to view supported commands.\n", cmd.c_str());
             break;
     }
 };

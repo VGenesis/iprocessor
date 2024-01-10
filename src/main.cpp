@@ -1,6 +1,32 @@
 #ifndef MAIN_HPP
 #define MAIN_HPP
 #include "main.hpp"
+#include <SDL2/SDL_events.h>
+#endif
+
+#ifndef STRING
+#define STRING
+#include <string>
+#endif
+
+#ifndef UNORDERED_MAP
+#define UNORDERED_MAP
+#include <unordered_map>
+#endif
+
+#ifndef IOSTREAM
+#define IOSTREAM
+#include <iostream>
+#endif
+
+#ifndef ATOMIC
+#define ATOMIC
+#include <atomic>
+#endif
+
+#ifndef THREAD
+#define THREAD
+#include <thread>
 #endif
 
 #define FPS 24
@@ -32,6 +58,7 @@ void threadf_cli(std::atomic<bool>* running){
 
         cli_mtx.lock();
         applyCommand(cmd, running);
+        updateImages();
         cli_mtx.unlock();
     }
 
@@ -60,9 +87,12 @@ void threadf_image_update(std::atomic<bool>* running, std::atomic<SDL_GLContext>
         time = SDL_GetTicks64();
         long ms = time - prev_time;
         while(ms > tick_ms){
-            updateImages(gl_context);
+            SDL_Event e;
+            while(SDL_PollEvent(&e)){
+            renderImages(gl_context, e);
             ms -= tick_ms;
             prev_time = time;
+            }
         }
     }
 
@@ -88,5 +118,4 @@ int main(){
     delete &image_thread;
 
     return 0;
-
 }

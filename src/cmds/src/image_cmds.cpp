@@ -125,7 +125,7 @@ void imageSave(std::vector<std::string> args, std::unordered_map<std::string, Pl
     file.close();
 
     Plot* plot = images.find(name)->second;
-    plot->update();
+    plot->updateEffects();
     SDL_SaveBMP(plot->getRenderSurf(), url.c_str());
     std::string err = SDL_GetError();
 
